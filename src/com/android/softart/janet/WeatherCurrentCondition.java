@@ -1,8 +1,8 @@
 package com.android.softart.janet;
 
+
 /**
- * Holds the information between the <current_conditions>-tag of what the Google
- * Weather API returned.
+Ultimate Weather API
  */
 public class WeatherCurrentCondition {
 
@@ -11,12 +11,11 @@ public class WeatherCurrentCondition {
 	// ===========================================================
 
 	private String dayofWeek = null;
-	private Integer tempCelcius = null;
-	private Integer tempFahrenheit = null;
-	private String iconURL = null;
+	private Integer tempCelciusHigh = null;
+	private Integer tempFahrenheitHigh = null;
+	private Integer tempCelciusLow = null;
+	private Integer tempFarenheitLow = null;
 	private String condition = null;
-	private String windCondition = null;
-	private String humidity = null;
 
 	// ===========================================================
 	// Constructors
@@ -38,51 +37,46 @@ public class WeatherCurrentCondition {
 		this.dayofWeek = dayofWeek;
 	}
 
-	public Integer getTempCelsius() {
-		return this.tempCelcius;
+	public Integer getTempCelciusHigh() {
+		return tempCelciusHigh;
 	}
 
-	public void setTempCelsius(Integer temp) {
-		this.tempCelcius = temp;
+	public void setTempCelciusHigh(Integer tempCelciusHigh) {
+		this.tempCelciusHigh = tempCelciusHigh;
 	}
 
-	public Integer getTempFahrenheit() {
-		return this.tempFahrenheit;
+	public Integer getTempFahrenheitHigh() {
+		return tempFahrenheitHigh;
 	}
 
-	public void setTempFahrenheit(Integer temp) {
-		this.tempFahrenheit = temp;
+	public void setTempFahrenheitHigh(Integer tempFahrenheitHigh) {
+		this.tempFahrenheitHigh = tempFahrenheitHigh;
 	}
 
-	public String getIconURL() {
-		return this.iconURL;
+	public Integer getTempCelciusLow() {
+		return tempCelciusLow;
 	}
 
-	public void setIconURL(String iconURL) {
-		this.iconURL = iconURL;
+	public void setTempCelciusLow(Integer tempCelciusLow) {
+		this.tempCelciusLow = tempCelciusLow;
+	}
+
+	public Integer getTempFarenheitLow() {
+		return tempFarenheitLow;
+	}
+
+	public void setTempFarenheitLow(Integer tempFarenheitLow) {
+		this.tempFarenheitLow = tempFarenheitLow;
 	}
 
 	public String getCondition() {
-		return this.condition;
+		return condition;
 	}
 
 	public void setCondition(String condition) {
 		this.condition = condition;
 	}
-
-	public String getWindCondition() {
-		return this.windCondition;
-	}
-
-	public void setWindCondition(String windCondition) {
-		this.windCondition = windCondition;
-	}
-
-	public String getHumidity() {
-		return this.humidity;
-	}
-
-	public void setHumidity(String humidity) {
-		this.humidity = humidity;
-	}
+	
+	
+	
 }

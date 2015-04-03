@@ -5,20 +5,36 @@
     android:orientation="vertical">
  
     <TextView
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="73dp"
         android:paddingBottom="4dip"
-        android:text="Click the button and start speaking! For weather say 'Weather #cityname' or 'temperature #cityname'" android:layout_weight="0.09"/>
- 
-    <Button android:id="@+id/speakButton"
-        android:layout_width="fill_parent"
+        android:text="Click the button and start speaking! For weather say &apos;Weather #cityname&apos; or &apos;temperature #cityname&apos;" />
+
+    <Button
+        android:id="@+id/speakButton"
+        android:layout_width="175dp"
+        android:layout_height="36dp"
+        android:background="@drawable/mic"
+        android:gravity="bottom|right"
         android:onClick="speakButtonClicked"
+        android:text="Say something to Janet" />
+
+    <EditText
+        android:id="@+id/editText1"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Say something to Janet" android:background="@drawable/mic" android:layout_weight="0.28" android:gravity="bottom|right"/>
- 
-    <ListView android:id="@+id/list"
-        android:layout_width="fill_parent"
-        android:layout_height="0dip"
-        android:layout_weight="1" />
+        android:ems="10" />
+
+    <Button
+        android:id="@+id/button1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="getWeather" />
+
+    <ListView
+        android:id="@+id/list"
+        android:layout_width="280dp"
+        android:layout_height="261dp" >
+    </ListView>
  
  </LinearLayout>

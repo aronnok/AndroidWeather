@@ -1,31 +1,35 @@
 package com.android.softart.janet;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+
 import android.app.Activity;
-import android.os.Bundle;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
-
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-
-
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-
-import org.xml.sax.InputSource;
-import org.xml.sax.XMLReader;
 
 
  
@@ -40,234 +44,257 @@ public class JanetActivity extends Activity implements OnInitListener {
 	 private static final String REMOVE_PATTERN = "^(?i)(weather)|(temperature)\\s((of)|(at)|(for)|(in))\\s";
 	 
 	 private TextToSpeech mTts;
-
+     private ArrayList<String> myStringArray1 =  new ArrayList<String>();
+     private   ArrayAdapter<String> aa ;
 	 
 	    /**
-	     * Called with the activity is first created.
-	     */
-	    @Override
-	    public void onCreate(Bundle savedInstanceState)
-	    {
-	        super.onCreate(savedInstanceState);
-	        setContentView(R.layout.main);
-	 
-	        Button speakButton = (Button) findViewById(R.id.speakButton);
-	 
-	        wordsList = (ListView) findViewById(R.id.list);
-	 
-	        // Disable button if no recognition service is present
-	        PackageManager pm = getPackageManager();
-	        List<ResolveInfo> activities = pm.queryIntentActivities(
-	                new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH), 0);
-	        if (activities.size() == 0)
-	        {
-	            speakButton.setEnabled(false);
-	            speakButton.setText("Recognizer not present");
-	        }
-	        
-	        mTts = new TextToSpeech(this,
-	                this  // TextToSpeech.OnInitListener
-	                );
-
-	        
-	        wordsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-	            @Override
-	            public void onItemClick(AdapterView<?> av, View v, int pos, long id) {
-	                onListItemClick(v,pos,id);
-	            }
-
-				
-	        });
-	        
-	    }
+     * Called with the activity is first created.
+     */
+    @Override
+    public void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
+ 
+        Button speakButton = (Button) findViewById(R.id.speakButton);
+        Button getWeatherButton = (Button) findViewById(R.id.button1);
+        final TextView ts = (TextView) findViewById(R.id.editText1);
+        
+        
+        wordsList = (ListView) findViewById(R.id.list);
+ 
+        // Disable button if no recognition service is present
+        PackageManager pm = getPackageManager();
+        List<ResolveInfo> activities = pm.queryIntentActivities(
+                new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH), 0);
+        if (activities.size() == 0)
+        {
+            speakButton.setEnabled(false);
+            speakButton.setText("Recognizer not present");
+        }
+        // TextToSpeech.OnInitListener
+        mTts = new TextToSpeech(this, this  );
+       
+        
+        aa = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,myStringArray1  );
+        
+        wordsList.setAdapter(aa);
+        
+        getWeatherButton.setOnClickListener(new OnClickListener(){
+        	
+        	  public void onClick(View v) {
+                   
+        		  
+        		  //CustomAdapter adapter = new CustomAdapter(getActivity(), R.layout.row, myStringArray1);
+        		   
+        		 addItem(v, ts.getText().toString() );
+        		  	
+        		  //Log.e("Janet ","$$$$$$$$$$$$$$"+ts.getText().toString());
+                  //Log.e("Response" ,getWeatherByCity( ts.getText().toString() ));
+                }
+        });
+        
+        
+        wordsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> av, View v, int pos, long id) {
+                onListItemClick(v,pos,id);
+            }
+        });
+        
+    }
 	    
-	    private void onListItemClick(View v, int pos, long id) {
-			// TODO Auto-generated method stub
+    
+    private void addItem(View v, String ts){
+    	 aa = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,myStringArray1  );
+         
+         wordsList.setAdapter(aa);
+         
+    	
+		 this.myStringArray1.add(ts);
+		 aa.notifyDataSetChanged();
+	
+    	
+    }
+    
+    private void onListItemClick(View v, int pos, long id) {
+		// TODO Auto-generated method stub
+    	
+    	String toastMsg =(String) wordsList.getItemAtPosition(pos);
+    	
+    	if(toastMsg.contains( "weather") || toastMsg.contains( "temperature")){
+        	
+            toastMsg = getWeatherByCity(toastMsg );
+            
+            Toast.makeText(JanetActivity.this, 
+					toastMsg, Toast.LENGTH_SHORT).show();
 	    	
-	    	String toastMsg =(String) wordsList.getItemAtPosition(pos);
+            mTts.speak( toastMsg ,
+                    TextToSpeech.QUEUE_FLUSH,  // Drop all pending entries in the playback queue.
+                    null);
+        }
+    	else{
+	    	Toast.makeText(JanetActivity.this, 
+					toastMsg, Toast.LENGTH_SHORT).show();
 	    	
-	    	if(toastMsg.contains( "weather") || toastMsg.contains( "temperature")){
+	    	mTts.speak( toastMsg ,
+                    TextToSpeech.QUEUE_FLUSH,  // Drop all pending entries in the playback queue.
+                    null);
+    	}
+	}
+ 
+    /**
+     * Handle the action of the button being clicked
+     */
+    public void speakButtonClicked(View v)
+    {
+        startVoiceRecognitionActivity();
+    }
+ 
+    /**
+     * Fire an intent to start the voice recognition activity.
+     */
+    private void startVoiceRecognitionActivity()
+    {
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Janet prototype...");
+        startActivityForResult(intent, REQUEST_CODE);
+    }
+ 
+    /**
+     * Handle the results from the voice recognition activity.
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        if (requestCode == REQUEST_CODE && resultCode == RESULT_OK)
+        {
+            // Populate the wordsList with the String values the recognition engine thought it heard
+            ArrayList<String> matches = data.getStringArrayListExtra(
+                    RecognizerIntent.EXTRA_RESULTS);
+            wordsList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,
+                    matches));
+            
+            
+            String speakMatched = (String) matches.get(0);
+            
             	
-                toastMsg = getWeatherByCity(toastMsg );
-                
-                Toast.makeText(JanetActivity.this, 
-						toastMsg, Toast.LENGTH_SHORT).show();
-		    	
-                mTts.speak( toastMsg ,
+            String response = JANET_RESPONSE + speakMatched; 
+            mTts.speak(  response,
+                    TextToSpeech.QUEUE_FLUSH,  // Drop all pending entries in the playback queue.
+                    null);
+            try{
+            	Thread.sleep(SLEEP);
+            }
+            catch(Exception e){
+            	
+            	Log.e("Thread error!",e.getMessage() );
+            	
+            }
+            if(speakMatched.contains( "weather") || speakMatched.contains( "temperature")){
+            	
+            	response = getWeatherByCity(speakMatched );
+            	
+            	Toast.makeText(JanetActivity.this, 
+            			response, Toast.LENGTH_LONG).show();
+                mTts.speak( response ,
 	                    TextToSpeech.QUEUE_FLUSH,  // Drop all pending entries in the playback queue.
 	                    null);
             }
-	    	else{
-		    	Toast.makeText(JanetActivity.this, 
-						toastMsg, Toast.LENGTH_SHORT).show();
-		    	
-		    	mTts.speak( toastMsg ,
-	                    TextToSpeech.QUEUE_FLUSH,  // Drop all pending entries in the playback queue.
-	                    null);
-	    	}
-		}
-	 
-	    /**
-	     * Handle the action of the button being clicked
-	     */
-	    public void speakButtonClicked(View v)
-	    {
-	        startVoiceRecognitionActivity();
-	    }
-	 
-	    /**
-	     * Fire an intent to start the voice recognition activity.
-	     */
-	    private void startVoiceRecognitionActivity()
-	    {
-	        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-	        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-	                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-	        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Janet prototype...");
-	        startActivityForResult(intent, REQUEST_CODE);
-	    }
-	 
-	    /**
-	     * Handle the results from the voice recognition activity.
-	     */
-	    @Override
-	    protected void onActivityResult(int requestCode, int resultCode, Intent data)
-	    {
-	        if (requestCode == REQUEST_CODE && resultCode == RESULT_OK)
-	        {
-	            // Populate the wordsList with the String values the recognition engine thought it heard
-	            ArrayList<String> matches = data.getStringArrayListExtra(
-	                    RecognizerIntent.EXTRA_RESULTS);
-	            wordsList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,
-	                    matches));
-                
-	            //StringBuffer st = new StringBuffer("You Said       ");
-	            String speakMatched = (String) matches.get(0);
-	            //for (String word: matches)
-	            	//st.append(word +"    or    " );
-	            	
-	            String response = JANET_RESPONSE + speakMatched; 
-	            mTts.speak(  response,
-	                    TextToSpeech.QUEUE_FLUSH,  // Drop all pending entries in the playback queue.
-	                    null);
-	            try{
-	            	Thread.sleep(SLEEP);
-	            }
-	            catch(Exception e){
-	            	
-	            	Log.e("Thread error!",e.getMessage() );
-	            	
-	            }
-	            if(speakMatched.contains( "weather") || speakMatched.contains( "temperature")){
-	            	
-	            	response = getWeatherByCity(speakMatched );
-	                mTts.speak( response ,
-		                    TextToSpeech.QUEUE_FLUSH,  // Drop all pending entries in the playback queue.
-		                    null);
-	            }
-	            
-	            
-	        }
-	        super.onActivityResult(requestCode, resultCode, data);
-	    }
-	    
-	    
-	    private String getWeatherByCity(String weatherSt ){
-	    	
-
-	    	URL url;
-	    	String response = NOT_FOUND;
-	    	
-	    	//StringTokenizer st = new StringTokenizer(weatherSt);
-	    	
-			try {
-				/* Get what user typed to the EditText. */
-				
-				String cityParamString = NOT_FOUND;
-				
-				cityParamString = weatherSt.replaceFirst(REMOVE_PATTERN,"");
-				
-						
-				String queryString = "http://www.google.com/ig/api?weather="
-						+ cityParamString;
-				/* Replace blanks with HTML-Equivalent. */
-				url = new URL(queryString.replace(" ", "%20"));
-
-				/* Get a SAXParser from the SAXPArserFactory. */
-				SAXParserFactory spf = SAXParserFactory.newInstance();
-				SAXParser sp = spf.newSAXParser();
-
-				/* Get the XMLReader of the SAXParser we created. */
-				XMLReader xr = sp.getXMLReader();
-
-				/*
-				 * Create a new ContentHandler and apply it to the
-				 * XML-Reader
-				 */
-				GoogleWeatherHandler gwh = new GoogleWeatherHandler();
-				xr.setContentHandler(gwh);
-
-				/* Parse the xml-data our URL-call returned. */
-				xr.parse(new InputSource(url.openStream()));
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+    
+    private String getWeatherByCity(String weatherSt ){
+    	
+   
+    	String response = NOT_FOUND;
+    	
+		try {
+			/* Get what user typed to the EditText. */
 			
-				WeatherSet ws = gwh.getWeatherSet();
-				
-				WeatherCurrentCondition aWCC = ws.getWeatherCurrentCondition();
-				int tempMin = aWCC.getTempCelsius();
-				
-				response = "Temperature of "+cityParamString+" is "+ tempMin + " degree celsius"; 
-			} catch (Exception e) {
-				
-				Log.e( "WeatherQueryError", e.toString());
+			String cityParamString = NOT_FOUND;
+			cityParamString = (weatherSt.replaceFirst(REMOVE_PATTERN,""));
+			
+			HttpClient   httpclient = new DefaultHttpClient(new BasicHttpParams());
+			HttpGet httpget = 
+				new HttpGet("https://george-vustrey-weather.p.mashape.com/api.php?location="
+								+cityParamString.replace(" ", "%20"));
+			
+			// Depends on your web service
+			httpget.setHeader("Content-type", "application/json");
+			httpget.setHeader("X-Mashape-Authorization", "Vfgw7KMkbAQjIBIrWmA2dlCHLHB8viL9");
+			
+			InputStream inputStream = null;
+			String jsonResult = null;
+			try {
+			    HttpResponse httpResponse = httpclient.execute(httpget);           
+			    HttpEntity entity = httpResponse.getEntity();
+
+			    inputStream = entity.getContent();
+			    // json is UTF-8 by default
+			    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"), 8);
+			    StringBuilder sb = new StringBuilder();
+
+			    String line = null;
+			    while ((line = reader.readLine()) != null)
+			    {
+			        sb.append(line + "\n");
+			    }
+			    jsonResult = sb.toString();
+			} catch (Exception e) { 
+			    // Oops
+			}
+			finally {
+			    try{if(inputStream != null)inputStream.close();}catch(Exception squish){}
 			}
 			
-			return response; 
-	    }
-	    
-	    // Implements TextToSpeech.OnInitListener.
-	    public void onInit(int status) {
-	        // status can be either TextToSpeech.SUCCESS or TextToSpeech.ERROR.
-	        if (status == TextToSpeech.SUCCESS) {
-	            // Set preferred language to US english.
-	            // Note that a language may not be available, and the result will indicate this.
-	          /*  int result = mTts.setLanguage(Locale.US);
-	            // Try this someday for some interesting results.
-	            // int result mTts.setLanguage(Locale.FRANCE);
-	            if (result == TextToSpeech.LANG_MISSING_DATA ||
-	                result == TextToSpeech.LANG_NOT_SUPPORTED) {
-	               // Lanuage data is missing or the language is not supported.
-	                Log.e(TAG, "Language is not available.");
-	            } else {
-	                // Check the documentation for other possible result codes.
-	                // For example, the language may be available for the locale,
-	                // but not for the specified country and variant.
+			Log.e("Json", jsonResult);
+			
+		    UlitimateWeatherHandler uth = new UlitimateWeatherHandler(jsonResult);
+		    WeatherCurrentCondition  wcc = uth.getCurrentWeather();
+		    
+		    response = "Current weather of  "+cityParamString+" is"+
+			 " Low "+ wcc.getTempCelciusLow() + " degree celsius "+ 
+			 " High "+wcc.getTempCelciusHigh()+ " degree celsius weather "+
+			 " with "+ wcc.getCondition();
+			
+		} catch (Exception e) {
+			
+			
+			Log.e( "WeatherQueryError", e.toString());
+		}
+		
+		return response; 
+    }
+    
+    // Implements TextToSpeech.OnInitListener.
+    public void onInit(int status) {
+        
+        if (status == TextToSpeech.SUCCESS) {
+          
+        	Toast.makeText(JanetActivity.this, 
+					"Text-To-Speech engine is initialized", Toast.LENGTH_LONG).show();
+        	
+            
+        } else {
+        	Toast.makeText(JanetActivity.this, 
+					"Error occurred while initializing Text-To-Speech engine", Toast.LENGTH_LONG).show();
+        }
+    }
 
-	                // The TTS engine has been successfully initialized.
-	                // Allow the user to press the button for the app to speak again.
-	                mAgainButton.setEnabled(true);
-	                // Greet the user.
-	                sayHello();
-	                */
-	        	Toast.makeText(JanetActivity.this, 
-						"Text-To-Speech engine is initialized", Toast.LENGTH_LONG).show();
-	        	
-	            
-	        } else {
-	        	Toast.makeText(JanetActivity.this, 
-						"Error occurred while initializing Text-To-Speech engine", Toast.LENGTH_LONG).show();
-	        }
-	    }
+    
+    @Override
+    public void onDestroy() {
+        // Don't forget to shutdown!
+        if (mTts != null) {
+            mTts.stop();
+            mTts.shutdown();
+        }
 
-	    
-	    @Override
-	    public void onDestroy() {
-	        // Don't forget to shutdown!
-	        if (mTts != null) {
-	            mTts.stop();
-	            mTts.shutdown();
-	        }
-
-	        super.onDestroy();
-	    }
+        super.onDestroy();
+    }
 
 }
